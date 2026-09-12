@@ -6,8 +6,8 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
-from app.models.tables import Portfolio, Holding, Watchlist, WatchlistItem
-from app.schemas.schemas import PortfolioCreate, HoldingCreate, HoldingUpdate, WatchlistCreate, WatchlistItemCreate
+from app.models.tables import Portfolio, PortfolioStock, Watchlist, WatchlistStock
+from app.schemas.schemas import PortfolioCreate, PortfolioStockCreate, PortfolioStockUpdate, WatchlistCreate, WatchlistStockCreate
 from app.services.market_data import market_data_service
 
 
@@ -45,29 +45,29 @@ class PortfolioService:
         )
         return result.scalar_one_or_none()
     
-    def add_holding(self, portfolio_id: UUID, data: HoldingCreate) -> Holding:
+    def add_holding(self, portfolio_id: UUID, data: PortfolioStockCreate) -> PortfolioStock:
         """Add a holding to portfolio."""
-        holding = Holding(
+        holding = PortfolioStock(
             portfolio_id=portfolio_id,
-            symbol=data.symbol.upper(),
+            ticker=data.ticker.upper(),
             quantity=data.quantity,
-            avg_price=data.avg_price
+            average_price=data.average_price
         )
         self.db.add(holding)
         self.db.commit()
         self.db.refresh(holding)
         return holding
     
-    def update_holding(self, holding_id: UUID, data: HoldingUpdate) -> Optional[Holding]:
+    def update_holding(self, holding_id: UUID, data: PortfolioStockUpdate) -> Optional[PortfolioStock]:
         """Update a holding."""
-        holding = self.db.get(Holding, holding_id)
+        holding = self.db.get(PortfolioStock, holding_id)
         if not holding:
             return None
         
         if data.quantity is not None:
             holding.quantity = data.quantity
-        if data.avg_price is not None:
-            holding.avg_price = data.avg_price
+        if data.average_price is not None:
+            holding.average_price = data.average_price
         
         self.db.commit()
         self.db.refresh(holding)
@@ -75,7 +75,7 @@ class PortfolioService:
     
     def remove_holding(self, holding_id: UUID) -> bool:
         """Remove a holding from portfolio."""
-        holding = self.db.get(Holding, holding_id)
+        holding = self.db.get(PortfolioStock, holding_id)
         if not holding:
             return False
         
@@ -86,33 +86,33 @@ class PortfolioService:
     async def get_holdings_with_prices(self, portfolio_id: UUID) -> List[Dict[str, Any]]:
         """Get holdings with current prices and P&L."""
         result = self.db.execute(
-            select(Holding).where(Holding.portfolio_id == portfolio_id)
+            select(PortfolioStock).where(PortfolioStock.portfolio_id == portfolio_id)
         )
         holdings = list(result.scalars().all())
         
         holdings_data = []
         for holding in holdings:
             # Get current price
-            quote = await market_data_service.get_current_quote(holding.symbol)
+            quote = await market_data_service.get_current_quote(holding.ticker)
             current_price = quote.price if quote else None
             
             current_value = current_price * float(holding.quantity) if current_price else None
-            cost_basis = float(holding.avg_price) * float(holding.quantity)
+            cost_basis = float(holding.average_price) * float(holding.quantity)
             pnl = current_value - cost_basis if current_value else None
             pnl_percent = (pnl / cost_basis * 100) if pnl and cost_basis else None
             
             holdings_data.append({
                 "id": str(holding.id),
                 "portfolio_id": str(portfolio_id),
-                "symbol": holding.symbol,
+                "ticker": holding.ticker,
+                "company_name": holding.company_name,
                 "quantity": float(holding.quantity),
-                "avg_price": float(holding.avg_price),
+                "average_price": float(holding.average_price),
                 "current_price": current_price,
                 "current_value": current_value,
                 "pnl": pnl,
                 "pnl_percent": pnl_percent,
-                "created_at": holding.created_at,
-                "updated_at": holding.updated_at
+                "last_updated": holding.last_updated
             })
         
         return holdings_data
@@ -161,11 +161,11 @@ class WatchlistService:
         )
         return list(result.scalars().all())
     
-    def add_to_watchlist(self, watchlist_id: UUID, data: WatchlistItemCreate) -> WatchlistItem:
+    def add_to_watchlist(self, watchlist_id: UUID, data: WatchlistStockCreate) -> WatchlistStock:
         """Add item to watchlist."""
-        item = WatchlistItem(
+        item = WatchlistStock(
             watchlist_id=watchlist_id,
-            symbol=data.symbol.upper(),
+            ticker=data.ticker.upper(),
             notes=data.notes
         )
         self.db.add(item)
@@ -173,12 +173,12 @@ class WatchlistService:
         self.db.refresh(item)
         return item
     
-    def remove_from_watchlist(self, watchlist_id: UUID, symbol: str) -> bool:
+    def remove_from_watchlist(self, watchlist_id: UUID, ticker: str) -> bool:
         """Remove item from watchlist."""
         result = self.db.execute(
-            select(WatchlistItem).where(
-                WatchlistItem.watchlist_id == watchlist_id,
-                WatchlistItem.symbol == symbol.upper()
+            select(WatchlistStock).where(
+                WatchlistStock.watchlist_id == watchlist_id,
+                WatchlistStock.ticker == ticker.upper()
             )
         )
         item = result.scalar_one_or_none()
@@ -202,16 +202,17 @@ class WatchlistService:
         
         # Get items
         items_result = self.db.execute(
-            select(WatchlistItem).where(WatchlistItem.watchlist_id == watchlist_id)
+            select(WatchlistStock).where(WatchlistStock.watchlist_id == watchlist_id)
         )
         items = list(items_result.scalars().all())
         
         # Get prices
         items_data = []
         for item in items:
-            quote = await market_data_service.get_current_quote(item.symbol)
+            quote = await market_data_service.get_current_quote(item.ticker)
             items_data.append({
-                "symbol": item.symbol,
+                "ticker": item.ticker,
+                "company_name": item.company_name,
                 "notes": item.notes,
                 "price": quote.price if quote else None,
                 "change": quote.change if quote else None,

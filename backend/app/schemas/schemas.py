@@ -57,32 +57,33 @@ class PortfolioResponse(BaseModel):
         from_attributes = True
 
 
-class HoldingCreate(BaseModel):
-    """Schema for adding a holding."""
-    symbol: str = Field(..., min_length=1, max_length=50)
+class PortfolioStockCreate(BaseModel):
+    """Schema for adding a stock to portfolio."""
+    ticker: str = Field(..., min_length=1, max_length=50)
     quantity: float = Field(..., gt=0)
-    avg_price: float = Field(..., gt=0)
+    average_price: float = Field(..., gt=0)
+    company_name: Optional[str] = None
 
 
-class HoldingUpdate(BaseModel):
-    """Schema for updating a holding."""
+class PortfolioStockUpdate(BaseModel):
+    """Schema for updating a portfolio stock."""
     quantity: Optional[float] = None
-    avg_price: Optional[float] = None
+    average_price: Optional[float] = None
 
 
-class HoldingResponse(BaseModel):
-    """Schema for holding data with current price."""
+class PortfolioStockResponse(BaseModel):
+    """Schema for portfolio stock data with current price."""
     id: UUID
     portfolio_id: UUID
-    symbol: str
+    ticker: str
+    company_name: Optional[str] = None
     quantity: float
-    avg_price: float
+    average_price: float
     current_price: Optional[float] = None
     current_value: Optional[float] = None
     pnl: Optional[float] = None
     pnl_percent: Optional[float] = None
-    created_at: datetime
-    updated_at: datetime
+    last_updated: datetime
     
     class Config:
         from_attributes = True
@@ -95,10 +96,24 @@ class WatchlistCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
 
 
-class WatchlistItemCreate(BaseModel):
+class WatchlistStockCreate(BaseModel):
     """Schema for adding item to watchlist."""
-    symbol: str = Field(..., min_length=1, max_length=50)
+    ticker: str = Field(..., min_length=1, max_length=50)
+    company_name: Optional[str] = None
     notes: Optional[str] = None
+
+
+class WatchlistStockResponse(BaseModel):
+    """Schema for watchlist stock data."""
+    id: UUID
+    watchlist_id: UUID
+    ticker: str
+    company_name: Optional[str] = None
+    notes: Optional[str] = None
+    added_at: datetime
+    
+    class Config:
+        from_attributes = True
 
 
 class WatchlistResponse(BaseModel):

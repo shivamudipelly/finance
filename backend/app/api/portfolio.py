@@ -10,8 +10,8 @@ from app.api.auth import get_current_user
 from app.models.tables import User
 from app.schemas.schemas import (
     PortfolioCreate, PortfolioResponse, 
-    HoldingCreate, HoldingUpdate,
-    WatchlistCreate, WatchlistItemCreate
+    PortfolioStockCreate, PortfolioStockUpdate,
+    WatchlistCreate, WatchlistStockCreate
 )
 from app.services.portfolio import PortfolioService, WatchlistService
 
@@ -51,7 +51,7 @@ async def get_portfolios(
 @router.post("/portfolios/{portfolio_id}/holdings")
 async def add_holding(
     portfolio_id: str,
-    data: HoldingCreate,
+    data: PortfolioStockCreate,
     current_user: User = Depends(get_current_user),
     service: PortfolioService = Depends(get_portfolio_service)
 ):
@@ -144,7 +144,7 @@ async def get_watchlists(
 @router.post("/watchlists/{watchlist_id}/items")
 async def add_to_watchlist(
     watchlist_id: str,
-    data: WatchlistItemCreate,
+    data: WatchlistStockCreate,
     current_user: User = Depends(get_current_user),
     service: WatchlistService = Depends(get_watchlist_service)
 ):
@@ -152,7 +152,7 @@ async def add_to_watchlist(
     from uuid import UUID
     try:
         item = service.add_to_watchlist(UUID(watchlist_id), data)
-        return {"message": "Item added", "item_id": str(item.watchlist_id)}
+        return {"message": "Item added", "item_id": str(item.id)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -172,17 +172,17 @@ async def get_watchlist(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.delete("/watchlists/{watchlist_id}/items/{symbol}")
+@router.delete("/watchlists/{watchlist_id}/items/{ticker}")
 async def remove_from_watchlist(
     watchlist_id: str,
-    symbol: str,
+    ticker: str,
     current_user: User = Depends(get_current_user),
     service: WatchlistService = Depends(get_watchlist_service)
 ):
     """Remove item from watchlist."""
     from uuid import UUID
     try:
-        success = service.remove_from_watchlist(UUID(watchlist_id), symbol)
+        success = service.remove_from_watchlist(UUID(watchlist_id), ticker)
         if not success:
             raise HTTPException(status_code=404, detail="Item not found in watchlist")
         return {"message": "Item removed"}
