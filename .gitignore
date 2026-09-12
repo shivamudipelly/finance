@@ -81,3 +81,4 @@ Thumbs.db
 *.tar.xz
 *.tar.zstnode_modules/
 .next/
+node_modules/
