@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     
     # Database - Use SQLite for local development (zero cost, no setup)
     # In Docker, this will be overridden by environment variable to PostgreSQL
-    DATABASE_URL: str = "sqlite:///./market_intelligence.db"
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./market_intelligence.db")
     
     # Redis
     REDIS_HOST: str = "localhost"

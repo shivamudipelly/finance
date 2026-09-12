@@ -5,10 +5,10 @@ from datetime import datetime
 # User schemas
 class UserBase(BaseModel):
     email: str
-    username: str
 
 class UserCreate(UserBase):
     password: str
+    full_name: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: str
@@ -16,6 +16,7 @@ class UserLogin(BaseModel):
 
 class UserResponse(UserBase):
     id: int
+    full_name: Optional[str] = None
     created_at: datetime
     
     class Config:
