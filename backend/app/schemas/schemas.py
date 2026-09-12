@@ -137,6 +137,8 @@ class StockQuote(BaseModel):
     market_cap: Optional[float] = None
     pe_ratio: Optional[float] = None
     timestamp: datetime
+    source: Optional[str] = None
+    is_mock: Optional[bool] = False
 
 
 class StockFundamentals(BaseModel):

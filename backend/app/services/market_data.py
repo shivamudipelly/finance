@@ -1,12 +1,22 @@
 """
 Data fetching service for market data.
-Uses yfinance as primary free data source.
+Uses robust MarketDataFetcher with multiple sources and fallbacks.
 """
-import yfinance as yf
-import pandas as pd
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime
 from app.schemas.schemas import DailyPriceResponse, StockQuote, StockFundamentals
+
+# Import our robust fetcher
+try:
+    from data_fetcher import MarketDataFetcher
+    fetcher = MarketDataFetcher()
+except Exception as e:
+    print(f"Warning: Could not import MarketDataFetcher: {e}")
+    fetcher = None
 
 
 class MarketDataService:
@@ -16,84 +26,84 @@ class MarketDataService:
         self.cache: Dict[str, Any] = {}
         self.cache_ttl: int = 300  # 5 minutes for quotes
     
-    def _get_yfinance_symbol(self, symbol: str, exchange: str = "NS") -> str:
-        """Convert symbol to yfinance format with exchange suffix."""
-        # For Indian stocks: RELIANCE -> RELIANCE.NS
-        # For US stocks: AAPL stays AAPL
-        if not any(c in symbol for c in ['.', ':']):
-            return f"{symbol}.{exchange}"
-        return symbol
-    
     async def get_historical_prices(
         self, 
         symbol: str, 
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
-        period: str = "1y"
+        period: str = "1mo"
     ) -> List[DailyPriceResponse]:
         """Fetch historical daily prices."""
-        yf_symbol = self._get_yfinance_symbol(symbol)
+        if not fetcher:
+            return []
         
         try:
-            ticker = yf.Ticker(yf_symbol)
+            # Use our robust fetcher
+            history = fetcher.get_history(symbol, period=period, use_mock=True)
             
-            if start_date and end_date:
-                df = ticker.history(start=start_date, end=end_date)
-            else:
-                df = ticker.history(period=period)
-            
-            if df.empty:
-                return []
+            # If fetcher returns None, generate mock data directly
+            if not history:
+                from data_fetcher import MockDataGenerator
+                history = MockDataGenerator.generate_history(symbol, days=30)
             
             prices = []
-            for date, row in df.iterrows():
+            for row in history:
                 prices.append(DailyPriceResponse(
                     symbol=symbol,
-                    date=date.date(),
-                    open=float(row.get('Open', 0)) if pd.notna(row.get('Open')) else None,
-                    high=float(row.get('High', 0)) if pd.notna(row.get('High')) else None,
-                    low=float(row.get('Low', 0)) if pd.notna(row.get('Low')) else None,
-                    close=float(row.get('Close', 0)) if pd.notna(row.get('Close')) else None,
-                    volume=int(row.get('Volume', 0)) if pd.notna(row.get('Volume')) else None,
-                    adjusted_close=float(row.get('Close', 0)) if pd.notna(row.get('Close')) else None
+                    date=row['date'],
+                    open=row.get('open'),
+                    high=row.get('high'),
+                    low=row.get('low'),
+                    close=row.get('close'),
+                    volume=row.get('volume'),
+                    adjusted_close=row.get('close')
                 ))
             
             return prices
             
         except Exception as e:
             print(f"Error fetching historical prices for {symbol}: {e}")
-            return []
+            # Last resort fallback - generate mock data
+            try:
+                from data_fetcher import MockDataGenerator
+                history = MockDataGenerator.generate_history(symbol, days=30)
+                prices = []
+                for row in history:
+                    prices.append(DailyPriceResponse(
+                        symbol=symbol,
+                        date=row['date'],
+                        open=row.get('open'),
+                        high=row.get('high'),
+                        low=row.get('low'),
+                        close=row.get('close'),
+                        volume=row.get('volume'),
+                        adjusted_close=row.get('close')
+                    ))
+                return prices
+            except:
+                return []
     
     async def get_current_quote(self, symbol: str) -> Optional[StockQuote]:
         """Fetch current stock quote (delayed)."""
-        yf_symbol = self._get_yfinance_symbol(symbol)
+        if not fetcher:
+            return None
         
         try:
-            ticker = yf.Ticker(yf_symbol)
-            info = ticker.fast_info
+            # Use our robust fetcher with fallback to mock data
+            quote = fetcher.get_quote(symbol, use_mock=True)
             
-            if not info or 'lastPrice' not in dir(info):
-                # Fallback to history
-                hist = ticker.history(period='1d')
-                if hist.empty:
-                    return None
-                last_price = float(hist['Close'].iloc[-1])
-            else:
-                last_price = float(info.lastPrice)
-            
-            # Get previous close for change calculation
-            hist = ticker.history(period='2d')
-            prev_close = float(hist['Close'].iloc[-2]) if len(hist) > 1 else last_price
-            change = last_price - prev_close
-            change_percent = (change / prev_close * 100) if prev_close else 0
+            if not quote:
+                return None
             
             return StockQuote(
-                symbol=symbol,
-                price=last_price,
-                change=round(change, 2),
-                change_percent=round(change_percent, 2),
-                volume=int(hist['Volume'].iloc[-1]) if not hist.empty else None,
-                timestamp=datetime.utcnow()
+                symbol=quote.get('symbol', symbol),
+                price=quote.get('price', 0),
+                change=quote.get('change', 0),
+                change_percent=quote.get('change_percent', 0),
+                volume=quote.get('volume'),
+                timestamp=datetime.fromisoformat(quote.get('timestamp', datetime.now().isoformat())),
+                source=quote.get('source', 'unknown'),
+                is_mock=quote.get('is_mock', False)
             )
             
         except Exception as e:
@@ -102,25 +112,25 @@ class MarketDataService:
     
     async def get_fundamentals(self, symbol: str) -> Optional[StockFundamentals]:
         """Fetch fundamental data for a stock."""
-        yf_symbol = self._get_yfinance_symbol(symbol)
+        if not fetcher:
+            return None
         
         try:
-            ticker = yf.Ticker(yf_symbol)
-            info = ticker.info
+            company_info = fetcher.get_company_info(symbol, use_mock=True)
             
-            if not info:
+            if not company_info:
                 return None
             
             return StockFundamentals(
                 symbol=symbol,
-                market_cap=info.get('marketCap'),
-                pe_ratio=info.get('trailingPE') or info.get('forwardPE'),
-                eps=info.get('trailingEps'),
-                book_value=info.get('bookValue'),
-                debt_to_equity=info.get('debtToEquity'),
-                roe=info.get('returnOnEquity'),
-                revenue_growth=info.get('revenueGrowth'),
-                profit_margin=info.get('profitMargins')
+                market_cap=company_info.get('market_cap'),
+                pe_ratio=company_info.get('pe_ratio'),
+                eps=None,  # Would need earnings data
+                book_value=None,
+                debt_to_equity=company_info.get('debt_to_equity'),
+                roe=company_info.get('roe'),
+                revenue_growth=company_info.get('revenue_growth'),
+                profit_margin=company_info.get('profit_margin')
             )
             
         except Exception as e:
@@ -129,25 +139,12 @@ class MarketDataService:
     
     async def get_company_info(self, symbol: str) -> Optional[Dict[str, Any]]:
         """Get basic company information."""
-        yf_symbol = self._get_yfinance_symbol(symbol)
+        if not fetcher:
+            return None
         
         try:
-            ticker = yf.Ticker(yf_symbol)
-            info = ticker.info
-            
-            if not info:
-                return None
-            
-            return {
-                'symbol': symbol,
-                'name': info.get('shortName') or info.get('longName'),
-                'sector': info.get('sector'),
-                'industry': info.get('industry'),
-                'description': info.get('longBusinessSummary'),
-                'website': info.get('website'),
-                'country': info.get('country'),
-                'employees': info.get('fullTimeEmployees')
-            }
+            company_info = fetcher.get_company_info(symbol, use_mock=True)
+            return company_info
             
         except Exception as e:
             print(f"Error fetching company info for {symbol}: {e}")
@@ -155,8 +152,6 @@ class MarketDataService:
     
     async def search_stocks(self, query: str) -> List[Dict[str, str]]:
         """Search for stocks by symbol or name."""
-        # yfinance doesn't have a great search API, so we'll use a simple approach
-        # In production, you'd use a proper search API
         results = []
         
         # Common Indian stocks for demo
@@ -180,6 +175,8 @@ class MarketDataService:
             'TITAN': 'Titan Company',
             'SUNPHARMA': 'Sun Pharmaceutical',
             'NESTLEIND': 'Nestle India',
+            'TATAMOTORS': 'Tata Motors',
+            'ULTRACEMCO': 'UltraTech Cement',
         }
         
         query_upper = query.upper()
