@@ -1,265 +1,216 @@
-# Market Intelligence Platform
+# Market AI - Personal Market Intelligence Platform
 
-A personal AI-powered market intelligence and decision-support web application.
+Your personal AI-powered market research assistant for analyzing stocks, IPOs, portfolios, and market opportunities.
 
-## Overview
+## Features
 
-This platform serves as your personal AI market analyst, helping you:
-- Analyze stocks across different time horizons (intraday, swing, positional, long-term)
-- Research IPOs
-- Monitor portfolios and watchlists
-- Discover opportunities through intelligent scanning
-- Understand market conditions with evidence-based analysis
+### AI Chat Interface
+- Ask natural language questions about stocks, markets, IPOs
+- Get evidence-based analysis with clear reasoning
+- Support for multiple timeframes (intraday, swing, long-term)
+- Transparent risk assessment and conclusions
 
-## Architecture
+### Portfolio Management
+- Track your stock holdings
+- Real-time P&L calculation
+- Portfolio performance analytics
+- Add/remove stocks easily
 
-```
-Frontend (React + TypeScript) ←→ Backend (FastAPI/Python) ←→ PostgreSQL + Redis
-                                          ↓
-                                    AI Services (Ollama/Groq)
-                                          ↓
-                                    Market Data (yfinance)
-```
+### Watchlists
+- Create multiple watchlists (Long-term, Swing, IPO, etc.)
+- Track stocks you're interested in
+- Quick access to monitored stocks
+
+### Market Dashboard
+- Indian market indices (NIFTY, BANK NIFTY, SENSEX)
+- Top gainers and losers
+- Market breadth and sentiment
+- AI-powered market insights
+
+## Technology Stack
+
+### Backend
+- **Python** with FastAPI
+- **PostgreSQL** for data storage
+- **Redis** for caching
+- **yfinance** for market data (free)
+- Multi-source data fetching with fallbacks
+
+### Frontend
+- **React 19** with TypeScript
+- **TailwindCSS** for styling
+- **Zustand** for state management
+- **React Query** for data fetching
+- **Lucide React** for icons
+
+### AI
+- **Ollama** with Llama 3.2 (local, free)
+- Intent classification for query understanding
+- Evidence-based reasoning engine
+
+## Zero-Cost Architecture
+
+This platform is built to work with **zero recurring cost**:
+
+✅ Free market data via yfinance (with mock fallback)  
+✅ Local AI inference with Ollama  
+✅ Open-source database (PostgreSQL)  
+✅ Free caching (Redis)  
+✅ No paid APIs required  
 
 ## Quick Start
 
 ### Prerequisites
-
 - Docker & Docker Compose
-- Python 3.11+ (for local development)
-- Node.js 18+ (for frontend development)
-- Ollama (optional, for local LLM)
+- Node.js 18+
+- Python 3.10+
+- (Optional) Ollama for local AI
 
-### Option 1: Using Docker Compose (Recommended)
+### Installation
 
-1. **Start infrastructure services:**
+1. **Start the platform:**
 ```bash
-docker-compose up -d postgres redis
+./start.sh
 ```
 
-2. **Copy environment file:**
-```bash
-cd backend
-cp .env.example .env
-# Edit .env with your settings
-```
+2. **Access the application:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
 
-3. **Install dependencies and run backend:**
-```bash
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+### Manual Setup
 
-4. **Access API docs:** http://localhost:8000/docs
-
-### Option 2: Full Local Development
-
-1. **Start databases:**
-```bash
-docker-compose up -d postgres redis
-```
-
-2. **Setup backend:**
+#### Backend
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-3. **Setup frontend:**
+#### Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-## Configuration
-
-### Environment Variables
-
-Key variables in `backend/.env`:
-
-```env
-# Database
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/market_intelligence
-
-# Security
-SECRET_KEY=your-secret-key-min-32-characters
-
-# LLM Settings
-LLM_PROVIDER=ollama  # or "groq"
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama3.2
-
-# Groq API (free tier available at https://console.groq.com)
-GROQ_API_KEY=your-groq-api-key
-
-# Data Sources
-YFINANCE_ENABLED=true
-```
-
-### LLM Options
-
-**Option 1: Ollama (Local, Free)**
+#### Docker Services
 ```bash
-# Install Ollama: https://ollama.ai
-ollama pull llama3.2
+docker-compose up -d
 ```
 
-**Option 2: Groq API (Free Tier)**
-- Get API key: https://console.groq.com
-- Add to `.env`: `GROQ_API_KEY=your-key`
+## Usage Examples
+
+### AI Chat Questions
+- "Analyze TCS for a 3-year investment"
+- "Is this a good time for swing trading?"
+- "What's happening in the Indian market today?"
+- "Find fundamentally strong companies that have fallen"
+- "Should I apply for this IPO?"
+- "Analyze my portfolio risk"
+
+### Portfolio Management
+1. Go to Portfolio page
+2. Click "Add Stock"
+3. Enter symbol (e.g., RELIANCE.NS), quantity, and average price
+4. View real-time P&L
+
+### Watchlists
+1. Go to Watchlist page
+2. Create a new watchlist (e.g., "Long-term Investments")
+3. Add stocks by symbol
+4. Monitor your selected stocks
 
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login
-- `GET /api/auth/me` - Get current user
-
-### Portfolio
-- `POST /api/portfolio/portfolios` - Create portfolio
-- `GET /api/portfolio/portfolios` - List portfolios
-- `POST /api/portfolio/portfolios/{id}/holdings` - Add holding
-- `GET /api/portfolio/portfolios/{id}/summary` - Portfolio summary
-
-### Watchlist
-- `POST /api/portfolio/watchlists` - Create watchlist
-- `GET /api/portfolio/watchlists` - List watchlists
-- `POST /api/portfolio/watchlists/{id}/items` - Add to watchlist
+- `POST /api/v1/auth/register` - Register new user
+- `POST /api/v1/auth/login` - Login
+- `GET /api/v1/auth/me` - Get current user
 
 ### Stocks
-- `GET /api/stocks/search?q=query` - Search stocks
-- `GET /api/stocks/{symbol}/quote` - Current quote
-- `GET /api/stocks/{symbol}/fundamentals` - Fundamental data
-- `GET /api/stocks/{symbol}/prices` - Historical prices
+- `GET /api/v1/stocks/search?q=query` - Search stocks
+- `GET /api/v1/stocks/{symbol}/quote` - Get stock quote
+- `GET /api/v1/stocks/{symbol}/history` - Get historical data
+- `GET /api/v1/stocks/{symbol}/details` - Get stock details
+
+### Portfolio
+- `GET /api/v1/portfolio` - Get holdings
+- `POST /api/v1/portfolio/add` - Add stock
+- `DELETE /api/v1/portfolio/remove/{id}` - Remove stock
+
+### Watchlist
+- `GET /api/v1/watchlist` - Get watchlists
+- `POST /api/v1/watchlist/create` - Create watchlist
+- `POST /api/v1/watchlist/{id}/add` - Add stock to watchlist
+- `DELETE /api/v1/watchlist/{id}/remove/{stockId}` - Remove stock
 
 ### AI Chat
-- `POST /api/ai/chat` - Send message, get AI response
-- `POST /api/ai/analyze` - Get detailed stock analysis
-- `GET /api/ai/conversations` - List conversations
-
-## Features
-
-### MVP (Current)
-✅ User authentication
-✅ Portfolio management
-✅ Watchlist management
-✅ Stock data retrieval (via yfinance)
-✅ AI chat interface
-✅ Stock analysis with time-horizon awareness
-✅ Conversation history
-
-### Coming Soon
-⏳ IPO analysis
-⏳ Advanced scanning
-⏳ Technical indicators dashboard
-⏳ Alert system
-⏳ News integration
-⏳ Backtesting framework
+- `POST /api/v1/chat/analyze` - Analyze query
 
 ## Data Sources
 
-### Free Tier (Current)
-- **yfinance**: Daily OHLCV data (15-min delayed)
-- **Common Indian stocks**: Pre-configured list
-- **Local LLM**: Ollama with Llama 3.2
+### Free Tier (Default)
+- **yfinance**: Daily stock prices, fundamentals
+- **Mock Data**: Fallback when APIs are rate-limited
+- **Local AI**: Ollama with Llama 3.2
 
-### Limitations
-- No real-time data (15-min minimum delay)
-- Limited historical depth
-- Basic fundamental data only
-- No options/futures data
+### Upgrade Options (Paid)
+- **Alpha Vantage**: More reliable API calls
+- **Groq API**: Faster cloud-based AI inference
+- **Premium News APIs**: Real-time news sentiment
 
-## Development
+## Limitations
 
-### Project Structure
-```
-/workspace
-├── backend/
-│   ├── app/
-│   │   ├── api/          # API routes
-│   │   ├── core/         # Config, database, security
-│   │   ├── models/       # SQLAlchemy models
-│   │   ├── schemas/      # Pydantic schemas
-│   │   ├── services/     # Business logic
-│   │   └── main.py       # FastAPI app
-│   ├── requirements.txt
-│   └── .env
-├── frontend/             # React app (to be implemented)
-├── docs/
-│   └── ARCHITECTURE.md   # Detailed architecture
-├── docker-compose.yml
-└── Dockerfile
-```
+⚠️ **Data Delays**: Free data may be delayed by 15 minutes  
+⚠️ **Rate Limits**: yfinance has request limits (handled by caching)  
+⚠️ **Mock Data**: System uses realistic mock data when APIs fail  
+⚠️ **No Predictions**: AI provides analysis, not guaranteed predictions  
 
-### Running Tests
-```bash
-cd backend
-pytest
-```
+## Security
 
-### Code Quality
-```bash
-cd backend
-ruff check .
-black .
-```
-
-## Security Notes
-
-1. **Change the default SECRET_KEY** in production
-2. **Use HTTPS** in production (Let's Encrypt)
-3. **Never commit .env files** to version control
-4. **API keys** should be stored securely
-5. **Rate limiting** is implemented for API protection
-
-## Troubleshooting
-
-### Database Connection Error
-```bash
-# Check if PostgreSQL is running
-docker ps | grep postgres
-
-# Restart if needed
-docker-compose restart postgres
-```
-
-### Ollama Connection Error
-```bash
-# Check if Ollama is running
-ollama list
-
-# Pull model if needed
-ollama pull llama3.2
-```
-
-### Import Errors
-```bash
-# Reinstall dependencies
-pip install -r requirements.txt --force-reinstall
-```
+- JWT-based authentication
+- Password hashing with bcrypt
+- API key protection (never exposed in frontend)
+- Secure database connections
 
 ## Roadmap
 
-See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed roadmap including:
-- Phase 1-7 development plan
-- Technology decisions
-- Risk assessment
-- Upgrade paths for paid features
+### Phase 1 (Current) ✅
+- Basic AI chat interface
+- Portfolio management
+- Watchlist functionality
+- Market dashboard
+- Free data sources
 
-## License
+### Phase 2 (Planned)
+- IPO analysis module
+- Advanced screening/scanning
+- Alert system
+- Research report generation
 
-MIT License - See LICENSE file for details
+### Phase 3 (Future)
+- Backtesting framework
+- Advanced ML models
+- Global market integration
+- Mobile responsive design
 
 ## Disclaimer
 
-This application is for **educational and research purposes only**. 
+This platform is for **educational and research purposes only**. 
 
-- Not intended as registered investment advice
-- Past performance does not guarantee future results
-- Always do your own research before making investment decisions
-- The AI may make mistakes - verify important information
+- Not financial advice
+- Do your own research before investing
+- Past performance doesn't guarantee future results
+- AI analysis is based on available data and has limitations
+
+## License
+
+MIT License - Free for personal use
+
+## Support
+
+For issues or questions, please check:
+- API Documentation: http://localhost:8000/docs
+- Backend logs: Check terminal output
+- Frontend console: Browser DevTools
