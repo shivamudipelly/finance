@@ -1,7 +1,7 @@
 """
 SQLAlchemy database models.
 """
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, DECIMAL, BigInteger, Text, JSONB, Date, PrimaryKeyConstraint
+from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, DECIMAL, BigInteger, Text, Date, PrimaryKeyConstraint
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -115,5 +115,5 @@ class Message(Base):
     conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id"), nullable=False, index=True)
     role = Column(String(20), nullable=False)  # 'user' or 'assistant'
     content = Column(Text, nullable=False)
-    metadata = Column(JSON)  # Store intent, entities, sources
+    message_metadata = Column(JSON)  # Store intent, entities, sources
     created_at = Column(DateTime(timezone=True), server_default=func.now())
