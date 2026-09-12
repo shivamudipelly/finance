@@ -1,216 +1,198 @@
-# Market AI - Personal Market Intelligence Platform
+# 🚀 Market AI Platform - Personal Intelligence System
 
-Your personal AI-powered market research assistant for analyzing stocks, IPOs, portfolios, and market opportunities.
+**One-Command Setup • Zero Cost • Fully Private**
 
-## Features
+## Quick Start (Single Command)
 
-### AI Chat Interface
-- Ask natural language questions about stocks, markets, IPOs
-- Get evidence-based analysis with clear reasoning
-- Support for multiple timeframes (intraday, swing, long-term)
-- Transparent risk assessment and conclusions
-
-### Portfolio Management
-- Track your stock holdings
-- Real-time P&L calculation
-- Portfolio performance analytics
-- Add/remove stocks easily
-
-### Watchlists
-- Create multiple watchlists (Long-term, Swing, IPO, etc.)
-- Track stocks you're interested in
-- Quick access to monitored stocks
-
-### Market Dashboard
-- Indian market indices (NIFTY, BANK NIFTY, SENSEX)
-- Top gainers and losers
-- Market breadth and sentiment
-- AI-powered market insights
-
-## Technology Stack
-
-### Backend
-- **Python** with FastAPI
-- **PostgreSQL** for data storage
-- **Redis** for caching
-- **yfinance** for market data (free)
-- Multi-source data fetching with fallbacks
-
-### Frontend
-- **React 19** with TypeScript
-- **TailwindCSS** for styling
-- **Zustand** for state management
-- **React Query** for data fetching
-- **Lucide React** for icons
-
-### AI
-- **Ollama** with Llama 3.2 (local, free)
-- Intent classification for query understanding
-- Evidence-based reasoning engine
-
-## Zero-Cost Architecture
-
-This platform is built to work with **zero recurring cost**:
-
-✅ Free market data via yfinance (with mock fallback)  
-✅ Local AI inference with Ollama  
-✅ Open-source database (PostgreSQL)  
-✅ Free caching (Redis)  
-✅ No paid APIs required  
-
-## Quick Start
-
-### Prerequisites
-- Docker & Docker Compose
-- Node.js 18+
-- Python 3.10+
-- (Optional) Ollama for local AI
-
-### Installation
-
-1. **Start the platform:**
 ```bash
 ./start.sh
 ```
 
-2. **Access the application:**
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
+That's it! Open http://localhost:3000 in your browser.
 
-### Manual Setup
+## What You Get
 
-#### Backend
-```bash
-cd backend
-pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+| Component | Technology | Cost |
+|-----------|------------|------|
+| Frontend | React 19 + TypeScript | Free |
+| Backend | FastAPI + Python | Free |
+| Database | PostgreSQL | Free |
+| Cache | Redis | Free |
+| AI Engine | Ollama + Llama 3.2 | Free (runs locally) |
+| Market Data | yfinance + fallbacks | Free |
 
-#### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
+## Features
 
-#### Docker Services
-```bash
-docker-compose up -d
-```
-
-## Usage Examples
-
-### AI Chat Questions
-- "Analyze TCS for a 3-year investment"
-- "Is this a good time for swing trading?"
-- "What's happening in the Indian market today?"
-- "Find fundamentally strong companies that have fallen"
-- "Should I apply for this IPO?"
-- "Analyze my portfolio risk"
+### AI Chat Interface
+- Ask anything about stocks, IPOs, markets
+- Evidence-based analysis (not predictions)
+- Multi-timeframe awareness (intraday to long-term)
+- Understands intent: swing trading vs investing
 
 ### Portfolio Management
-1. Go to Portfolio page
-2. Click "Add Stock"
-3. Enter symbol (e.g., RELIANCE.NS), quantity, and average price
-4. View real-time P&L
+- Track your holdings
+- P&L calculation
+- Risk analysis
+- Concentration warnings
 
 ### Watchlists
-1. Go to Watchlist page
-2. Create a new watchlist (e.g., "Long-term Investments")
-3. Add stocks by symbol
-4. Monitor your selected stocks
+- Multiple watchlists (Long-term, Swing, IPO)
+- Real-time monitoring
+- Alert triggers
 
-## API Endpoints
+### Market Dashboard
+- Index overview
+- Top gainers/losers
+- Market breadth
+- AI insights
 
-### Authentication
-- `POST /api/v1/auth/register` - Register new user
-- `POST /api/v1/auth/login` - Login
-- `GET /api/v1/auth/me` - Get current user
+## Architecture
 
-### Stocks
-- `GET /api/v1/stocks/search?q=query` - Search stocks
-- `GET /api/v1/stocks/{symbol}/quote` - Get stock quote
-- `GET /api/v1/stocks/{symbol}/history` - Get historical data
-- `GET /api/v1/stocks/{symbol}/details` - Get stock details
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│   Frontend  │────▶│    Backend   │────▶│   Ollama    │
+│  (React)    │     │  (FastAPI)   │     │  (Llama 3)  │
+└─────────────┘     └──────────────┘     └─────────────┘
+                           │
+              ┌────────────┼────────────┐
+              ▼            ▼            ▼
+         ┌────────┐  ┌────────┐  ┌──────────┐
+         │ Postgres│  │ Redis  │  │ yfinance │
+         │  (DB)   │  │(Cache) │  │ (Data)   │
+         └────────┘  └────────┘  └──────────┘
+```
 
-### Portfolio
-- `GET /api/v1/portfolio` - Get holdings
-- `POST /api/v1/portfolio/add` - Add stock
-- `DELETE /api/v1/portfolio/remove/{id}` - Remove stock
+## Commands
 
-### Watchlist
-- `GET /api/v1/watchlist` - Get watchlists
-- `POST /api/v1/watchlist/create` - Create watchlist
-- `POST /api/v1/watchlist/{id}/add` - Add stock to watchlist
-- `DELETE /api/v1/watchlist/{id}/remove/{stockId}` - Remove stock
+| Command | Description |
+|---------|-------------|
+| `./start.sh` | Start everything |
+| `./stop.sh` | Stop all services |
+| `./logs.sh` | View all logs |
+| `./logs.sh backend` | View backend logs only |
+| `docker compose down -v` | Reset ALL data |
 
-### AI Chat
-- `POST /api/v1/chat/analyze` - Analyze query
+## Access Points
 
-## Data Sources
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+- **Database**: localhost:5432 (user/password)
+- **Redis**: localhost:6379
 
-### Free Tier (Default)
-- **yfinance**: Daily stock prices, fundamentals
-- **Mock Data**: Fallback when APIs are rate-limited
-- **Local AI**: Ollama with Llama 3.2
+## First Run Notes
 
-### Upgrade Options (Paid)
-- **Alpha Vantage**: More reliable API calls
-- **Groq API**: Faster cloud-based AI inference
-- **Premium News APIs**: Real-time news sentiment
+1. **AI Model Download**: On first start, Ollama downloads Llama 3.2 (~2GB). Takes 2-5 minutes.
+2. **Market Data**: Uses free APIs. If rate-limited, falls back to realistic mock data (clearly indicated).
+3. **Persistence**: All data stored in Docker volumes (survives restarts).
 
-## Limitations
+## Example Usage
 
-⚠️ **Data Delays**: Free data may be delayed by 15 minutes  
-⚠️ **Rate Limits**: yfinance has request limits (handled by caching)  
-⚠️ **Mock Data**: System uses realistic mock data when APIs fail  
-⚠️ **No Predictions**: AI provides analysis, not guaranteed predictions  
+### Register & Login
+1. Open http://localhost:3000
+2. Click "Register"
+3. Create account (any email/password)
+4. Login
 
-## Security
+### Ask AI Questions
+Try these in the chat:
+- "Analyze RELIANCE for long-term investment"
+- "Is TCS good for swing trading this week?"
+- "What happened in the market today?"
+- "Compare HDFC Bank and ICICI Bank"
+- "Find fundamentally strong companies that fell recently"
 
-- JWT-based authentication
-- Password hashing with bcrypt
-- API key protection (never exposed in frontend)
-- Secure database connections
+### Add Portfolio
+1. Go to Portfolio tab
+2. Add stock: Symbol, Quantity, Avg Price
+3. View P&L and analysis
 
-## Roadmap
+### Create Watchlist
+1. Go to Watchlist tab
+2. Create new watchlist
+3. Add stocks to monitor
 
-### Phase 1 (Current) ✅
-- Basic AI chat interface
-- Portfolio management
-- Watchlist functionality
-- Market dashboard
-- Free data sources
+## Troubleshooting
 
-### Phase 2 (Planned)
-- IPO analysis module
-- Advanced screening/scanning
-- Alert system
-- Research report generation
+### Port Already in Use
+If port 3000 or 8000 is busy:
+```bash
+# Check what's using the port
+lsof -i :3000
+# Kill the process or change port in docker-compose.yml
+```
 
-### Phase 3 (Future)
-- Backtesting framework
-- Advanced ML models
-- Global market integration
-- Mobile responsive design
+### AI Not Responding
+Wait 2-5 minutes on first run for model download. Check logs:
+```bash
+./logs.sh ollama
+```
 
-## Disclaimer
+### Market Data Issues
+Free APIs have rate limits. System uses mock data as fallback (clearly marked). For better data:
+- Add Alpha Vantage API key (free tier)
+- Wait for rate limit reset (1 minute)
 
-This platform is for **educational and research purposes only**. 
+### Reset Everything
+```bash
+docker compose down -v
+./start.sh
+```
 
-- Not financial advice
-- Do your own research before investing
-- Past performance doesn't guarantee future results
-- AI analysis is based on available data and has limitations
+## Limitations (Free Tier)
+
+| Feature | Free | Paid Upgrade |
+|---------|------|--------------|
+| Market Data | Delayed/Mock | Real-time |
+| Intraday Data | Limited | Full access |
+| News API | Basic | Comprehensive |
+| AI Speed | Local (slower) | Cloud API (fast) |
+| Rate Limits | Yes | Higher limits |
+
+## Security Notes
+
+- Default password: Change in production
+- API keys: Store in `.env` file (not committed)
+- HTTPS: Add reverse proxy for production
+- Authentication: JWT tokens (30 min expiry)
+
+## Development
+
+### Modify Backend
+Edit files in `/workspace/backend/` - auto-reloads
+
+### Modify Frontend
+Edit files in `/workspace/frontend/` - auto-reloads
+
+### View Logs
+```bash
+./logs.sh backend
+./logs.sh frontend
+```
+
+## Future Upgrades (Optional)
+
+When you want to invest money:
+
+1. **Better Data**: Alpha Vantage Premium ($50/mo)
+2. **Faster AI**: Groq API ($0.10/million tokens)
+3. **Real-time**: TradingView API (paid)
+4. **News**: NewsAPI Pro ($50/mo)
+5. **IPO Data**: Chittorgarh/Prime Database (paid)
+
+## Philosophy
+
+This is NOT a buy/sell signal machine. It's a **research assistant** that:
+- Gathers evidence
+- Shows multiple perspectives
+- Highlights risks
+- Never claims certainty
+- Helps YOU make decisions
 
 ## License
 
-MIT License - Free for personal use
+MIT License - Build your own version!
 
-## Support
+---
 
-For issues or questions, please check:
-- API Documentation: http://localhost:8000/docs
-- Backend logs: Check terminal output
-- Frontend console: Browser DevTools
+**Built with ❤️ for independent investors**

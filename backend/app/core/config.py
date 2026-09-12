@@ -20,15 +20,17 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # Database - Use SQLite for local development (zero cost, no setup)
+    # In Docker, this will be overridden by environment variable to PostgreSQL
     DATABASE_URL: str = "sqlite:///./market_intelligence.db"
     
     # Redis
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
+    REDIS_URL: Optional[str] = None  # Full URL override for Docker
     
-    # LLM Settings
-    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    # LLM Settings - Updated for Docker
+    OLLAMA_BASE_URL: str = "http://ollama:11434"  # Docker service name
     OLLAMA_MODEL: str = "llama3.2"
     
     GROQ_API_KEY: Optional[str] = None
