@@ -6,8 +6,8 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
-from app.models.tables import User
-from app.schemas.schemas import UserCreate, UserLogin
+from app.models.database_models import User
+from app.models.schemas import UserCreate, UserLogin
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token
 
 

@@ -19,8 +19,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    # Database
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/market_intelligence"
+    # Database - Use SQLite for local development (zero cost, no setup)
+    DATABASE_URL: str = "sqlite:///./market_intelligence.db"
     
     # Redis
     REDIS_HOST: str = "localhost"
